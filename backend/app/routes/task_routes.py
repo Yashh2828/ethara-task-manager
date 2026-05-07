@@ -83,27 +83,53 @@ def create_task():
 @token_required
 def get_all_tasks():
     """
-    Get all tasks for the projects the current user is a member of
+    Get tasks for the current user
+    - Admins: Get all tasks from projects they admin
+    - Members: Get only tasks assigned to them from projects they are part of
     GET /tasks?project_id=<optional>
     Requires: JWT token
     """
     try:
+        from app.services.auth_service import AuthService
         user_id = get_jwt_identity()
         project_id = request.args.get('project_id')
+        
+        # Check if user is admin (global admin role)
+        auth_service = AuthService()
+        user = auth_service.users_collection.find_one({'_id': convert_to_object_id(user_id)})
+        is_global_admin = user and user.get('role') == 'admin'
         
         if project_id:
             # If project_id provided, verify membership
             if not project_service.is_user_member(project_id, user_id):
                 return error_response("You're not a member of this project", 403)
-            # Get tasks for this project
-            tasks = task_service.get_tasks_by_project(project_id)
+            
+            # Check if user is admin of this specific project
+            is_project_admin = project_service.is_user_admin(project_id, user_id)
+            
+            if is_global_admin or is_project_admin:
+                # Admins see all tasks in the project
+                tasks = task_service.get_tasks_by_project(project_id)
+            else:
+                # Members see only their assigned tasks in this project
+                tasks = task_service.get_tasks_by_user(user_id, project_id)
         else:
             # Get all projects the user is a member of
             user_projects = project_service.get_projects_by_user(user_id)
-            project_ids = [convert_to_object_id(p['_id']) for p in user_projects if '_id' in p]
             
-            # Get all tasks for these projects
-            tasks = task_service._aggregate_tasks({'project_id': {'$in': project_ids}})
+            if is_global_admin:
+                # Global admins see all tasks from all projects they are part of
+                project_ids = [convert_to_object_id(p['_id']) for p in user_projects if '_id' in p]
+                if project_ids:
+                    tasks = task_service._aggregate_tasks({'project_id': {'$in': project_ids}})
+                else:
+                    tasks = []
+            else:
+                # Members see only their assigned tasks across all projects
+                tasks = task_service.get_tasks_by_user(user_id)
+                # Filter to only include tasks from projects they are members of
+                project_ids = {str(p['_id']) for p in user_projects if '_id' in p}
+                tasks = [t for t in tasks if str(t.get('project_id')) in project_ids]
         
         return success_response(tasks, "Tasks retrieved", 200)
         
@@ -116,19 +142,32 @@ def get_all_tasks():
 @token_required
 def get_tasks_by_project(project_id):
     """
-    Get all tasks in a project
+    Get tasks in a project
+    - Admins: Get all tasks
+    - Members: Get only tasks assigned to them
     GET /tasks/project/<project_id>
     Requires: JWT token (user must be project member)
     """
     try:
+        from app.services.auth_service import AuthService
         user_id = get_jwt_identity()
         
         # Check if user is member of project
         if not project_service.is_user_member(project_id, user_id):
             return error_response("You're not a member of this project", 403)
         
-        # Get tasks
-        tasks = task_service.get_tasks_by_project(project_id)
+        # Check if user is admin (global or project)
+        auth_service = AuthService()
+        user = auth_service.users_collection.find_one({'_id': convert_to_object_id(user_id)})
+        is_global_admin = user and user.get('role') == 'admin'
+        is_project_admin = project_service.is_user_admin(project_id, user_id)
+        
+        if is_global_admin or is_project_admin:
+            # Admins see all tasks
+            tasks = task_service.get_tasks_by_project(project_id)
+        else:
+            # Members see only their assigned tasks
+            tasks = task_service.get_tasks_by_user(user_id, project_id)
         
         return success_response(tasks, "Tasks retrieved", 200)
     
