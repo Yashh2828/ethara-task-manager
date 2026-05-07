@@ -4,7 +4,7 @@ import { formatDate, isOverdue, getStatusColor, getStatusLabel, getPriorityColor
 import { useAuth } from '../context/AuthContext'
 
 // Task card component with status update and actions
-const TaskCard = ({ task, onStatusChange, onEdit, onDelete, showProject = false }) => {
+const TaskCard = ({ task, onStatusChange, onEdit, onDelete, showProject = false, readOnly = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
@@ -42,33 +42,35 @@ const TaskCard = ({ task, onStatusChange, onEdit, onDelete, showProject = false 
         </div>
         
         {/* Actions Menu */}
-        <div className="relative">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
-          >
-            <MoreVertical className="w-4 h-4" />
-          </button>
-          
-          {isMenuOpen && (
-            <div className="absolute right-0 mt-1 w-32 bg-dark-800 border border-slate-700 rounded-lg shadow-xl z-10 animate-fade-in">
-              <button
-                onClick={() => { onEdit?.(task); setIsMenuOpen(false) }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors rounded-t-lg"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-                Edit
-              </button>
-              <button
-                onClick={() => { onDelete?.(_id); setIsMenuOpen(false) }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-slate-700 hover:text-red-300 transition-colors rounded-b-lg"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
+        {!readOnly && (
+          <div className="relative">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+            
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-1 w-32 bg-dark-800 border border-slate-700 rounded-lg shadow-xl z-10 animate-fade-in">
+                <button
+                  onClick={() => { onEdit?.(task); setIsMenuOpen(false) }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors rounded-t-lg"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => { onDelete?.(_id); setIsMenuOpen(false) }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-slate-700 hover:text-red-300 transition-colors rounded-b-lg"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Description */}
@@ -87,7 +89,11 @@ const TaskCard = ({ task, onStatusChange, onEdit, onDelete, showProject = false 
           <select
             value={status}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className={`text-xs font-medium px-2.5 py-1 rounded-full border-0 cursor-pointer ${getStatusColor(status)}`}
+            disabled={readOnly}
+            className={`text-xs font-medium px-2.5 py-1 rounded-full border-0 ${
+              readOnly ? 'cursor-default opacity-90' : 'cursor-pointer hover:opacity-80'
+            } ${getStatusColor(status)}`}
+            style={{ appearance: readOnly ? 'none' : 'auto' }}
           >
             <option value="assigned" className="bg-dark-800 text-white">Assigned</option>
             <option value="todo" className="bg-dark-800 text-white">To Do</option>

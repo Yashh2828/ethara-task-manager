@@ -212,6 +212,7 @@ const Dashboard = () => {
                   key={task._id} 
                   task={task} 
                   showProject={true}
+                  readOnly={user?.role === 'admin'}
                   onStatusChange={(id, status) => {
                     // Optimistic update
                     setRecentTasks(prev => prev.map(t => 

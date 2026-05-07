@@ -113,8 +113,17 @@ class DashboardService:
         try:
             user_id_obj = convert_to_object_id(user_id)
             
-            # Get all tasks assigned to user
-            tasks = list(self.tasks_collection.find({'assigned_to': user_id_obj}))
+            # Check if user is a global admin
+            user = self.users_collection.find_one({'_id': user_id_obj})
+            is_global_admin = user and user.get('role') == 'admin'
+            
+            # Get tasks
+            if is_global_admin:
+                # Admins see all tasks across the system
+                tasks = list(self.tasks_collection.find({}))
+            else:
+                # Members only see their assigned tasks
+                tasks = list(self.tasks_collection.find({'assigned_to': user_id_obj}))
             
             # Get project details for each task
             project_ids = set()
