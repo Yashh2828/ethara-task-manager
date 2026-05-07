@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #0E0E0E;
+  color: #EAEAEA;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0E0E0E;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2C2C2E;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3A3A3C;
+}
+
+/* Custom utility classes */
+@layer components {
+  .card {
+    @apply bg-[#1C1C1E] rounded-2xl border border-white/5 shadow-soft;
+  }
+
+  .btn-primary {
+    @apply bg-[#EAEAEA] hover:bg-[#D4D4D4] text-[#111111] font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm;
+  }
+
+  .btn-secondary {
+    @apply bg-[#2C2C2E] hover:bg-[#3A3A3C] text-[#EAEAEA] font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 border border-transparent;
+  }
+
+  .input-field {
+    @apply w-full bg-[#1C1C1E] border border-[#2C2C2E] rounded-xl py-2.5 px-4 text-[#EAEAEA] placeholder-[#8E8E93] focus:outline-none focus:ring-1 focus:ring-[#EAEAEA] focus:border-[#EAEAEA] transition-all duration-300 shadow-sm;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-[#A0A0A0] mb-1.5 tracking-wide;
+  }
+
+  .page-container {
+    @apply p-6 max-w-7xl mx-auto;
+  }
+
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-white;
+  }
+}
+
+/* Animation classes */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
